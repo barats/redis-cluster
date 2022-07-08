@@ -1,0 +1,103 @@
+version: '3'
+
+services:
+
+  redis-master1:
+    image: redis:6.0
+    container_name: redis_master1
+    hostname: redis_master1
+    volumes:
+      - ./container-data/redis-master1:/data      
+    healthcheck:
+      test: [ "CMD", "redis-cli","-p","6379"]
+      timeout: 10s
+      interval: 3s
+      retries: 10    
+    networks:
+      network_redis_cluster:
+        ipv4_address: 172.30.0.10
+
+  redis-master2:
+    image: redis:6.0
+    container_name: redis_master2
+    hostname: redis_master2
+    volumes:
+      - ./container-data/redis-master2:/data      
+    healthcheck:
+      test: [ "CMD", "redis-cli","-p","6379"]
+      timeout: 10s
+      interval: 3s
+      retries: 10    
+    networks:
+      network_redis_cluster:
+        ipv4_address: 172.30.0.11
+
+  redis-master3:
+    image: redis:6.0
+    container_name: redis_master3
+    hostname: redis_master3
+    volumes:
+      - ./container-data/redis-master3:/data      
+    healthcheck:
+      test: [ "CMD", "redis-cli","-p","6379"]
+      timeout: 10s
+      interval: 3s
+      retries: 10    
+    networks:
+      network_redis_cluster:
+        ipv4_address: 172.30.0.13   
+      
+  redis-replica1:
+    image: redis:6.0
+    container_name: redis_replica1
+    hostname: redis_replica1
+    volumes:
+      - ./container-data/redis-replica1:/data      
+    healthcheck:
+      test: [ "CMD", "redis-cli","-p","6379"]
+      timeout: 10s
+      interval: 3s
+      retries: 10    
+    networks:
+      network_redis_cluster:
+        ipv4_address: 172.30.0.14
+
+  redis-replica2:
+    image: redis:6.0
+    container_name: redis_replica2
+    hostname: redis_replica2
+    volumes:
+      - ./container-data/redis-replica2:/data      
+    healthcheck:
+      test: [ "CMD", "redis-cli","-p","6379"]
+      timeout: 10s
+      interval: 3s
+      retries: 10    
+    networks:
+      network_redis_cluster:
+        ipv4_address: 172.30.0.15  
+
+  redis-replica3:
+    image: redis:6.0
+    container_name: redis_replica3
+    hostname: redis_replica3
+    volumes:
+      - ./container-data/redis-replica3:/data      
+    healthcheck:
+      test: [ "CMD", "redis-cli","-p","6379"]
+      timeout: 10s
+      interval: 3s
+      retries: 10    
+    networks:
+      network_redis_cluster:
+        ipv4_address: 172.30.0.16                                          
+
+networks:
+  network_redis_cluster:
+    name: network_redis_cluster
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/24
+          gateway: 172.30.0.1
