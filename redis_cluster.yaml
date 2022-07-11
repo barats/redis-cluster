@@ -2,29 +2,37 @@ version: '3'
 
 services:
 
-  redis-master1:
-    image: redis:6.0
-    container_name: redis_master1
-    hostname: redis_master1
+  rc_node1:
+    image: redis:${REDIS_VERSION}
+    container_name: rc_node1
+    hostname: rc_node1
+    command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
-      - ./container-data/redis-master1:/data      
+      - ./container-data/rc-node1:/data   
+      - ./cluster_node.conf:/usr/local/etc/redis/redis.conf          
+    ports:
+      - ${REDIS_PORT1}:6379
     healthcheck:
-      test: [ "CMD", "redis-cli","-p","6379"]
+      test: [ "CMD", "redis-cli","-p","6379","-a","${REDIS_PASSWORD}"]
       timeout: 10s
       interval: 3s
-      retries: 10    
+      retries: 10
     networks:
       network_redis_cluster:
         ipv4_address: 172.30.0.10
 
-  redis-master2:
-    image: redis:6.0
-    container_name: redis_master2
-    hostname: redis_master2
+  rc_node2:
+    image: redis:${REDIS_VERSION}
+    container_name: rc_node2
+    hostname: rc_node2
+    command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
-      - ./container-data/redis-master2:/data      
+      - ./container-data/rc-node2:/data      
+      - ./cluster_node.conf:/usr/local/etc/redis/redis.conf          
+    ports:
+      - ${REDIS_PORT2}:6379
     healthcheck:
-      test: [ "CMD", "redis-cli","-p","6379"]
+      test: [ "CMD", "redis-cli","-p","6379","-a","${REDIS_PASSWORD}"]
       timeout: 10s
       interval: 3s
       retries: 10    
@@ -32,65 +40,103 @@ services:
       network_redis_cluster:
         ipv4_address: 172.30.0.11
 
-  redis-master3:
-    image: redis:6.0
-    container_name: redis_master3
-    hostname: redis_master3
+  rc_node3:
+    image: redis:${REDIS_VERSION}
+    container_name: rc_node3
+    hostname: rc_node3
+    command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
-      - ./container-data/redis-master3:/data      
+      - ./container-data/rc-node3:/data    
+      - ./cluster_node.conf:/usr/local/etc/redis/redis.conf          
+    ports:
+      - ${REDIS_PORT3}:6379      
     healthcheck:
-      test: [ "CMD", "redis-cli","-p","6379"]
+      test: [ "CMD", "redis-cli","-p","6379","-a","${REDIS_PASSWORD}"]
       timeout: 10s
       interval: 3s
       retries: 10    
     networks:
       network_redis_cluster:
-        ipv4_address: 172.30.0.13   
+        ipv4_address: 172.30.0.12   
       
-  redis-replica1:
-    image: redis:6.0
-    container_name: redis_replica1
-    hostname: redis_replica1
+  rc_node4:
+    image: redis:${REDIS_VERSION}
+    container_name: rc_node4
+    hostname: rc_node4
+    command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
-      - ./container-data/redis-replica1:/data      
+      - ./container-data/rc-node4:/data    
+      - ./cluster_node.conf:/usr/local/etc/redis/redis.conf           
+    ports:
+      - ${REDIS_PORT4}:6379      
     healthcheck:
-      test: [ "CMD", "redis-cli","-p","6379"]
+      test: [ "CMD", "redis-cli","-p","6379","-a","${REDIS_PASSWORD}"]
       timeout: 10s
       interval: 3s
       retries: 10    
     networks:
       network_redis_cluster:
-        ipv4_address: 172.30.0.14
+        ipv4_address: 172.30.0.13
 
-  redis-replica2:
-    image: redis:6.0
-    container_name: redis_replica2
-    hostname: redis_replica2
+  rc_node5:
+    image: redis:${REDIS_VERSION}
+    container_name: rc_node5
+    hostname: rc_node5
+    command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
-      - ./container-data/redis-replica2:/data      
+      - ./container-data/rc-node5:/data      
+      - ./cluster_node.conf:/usr/local/etc/redis/redis.conf          
+    ports:
+      - ${REDIS_PORT5}:6379      
     healthcheck:
-      test: [ "CMD", "redis-cli","-p","6379"]
+      test: [ "CMD", "redis-cli","-p","6379","-a","${REDIS_PASSWORD}"]
       timeout: 10s
       interval: 3s
       retries: 10    
+    networks:
+      network_redis_cluster:
+        ipv4_address: 172.30.0.14  
+
+  rc_node6:
+    image: redis:${REDIS_VERSION}
+    container_name: rc_node6
+    hostname: rc_node6
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./container-data/rc-node6:/data     
+      - ./cluster_node.conf:/usr/local/etc/redis/redis.conf          
+    ports:
+      - ${REDIS_PORT6}:6379      
+    healthcheck:
+      test: [ "CMD", "redis-cli","-p","6379","-a","${REDIS_PASSWORD}"]
+      timeout: 10s
+      interval: 3s
+      retries: 10                      
     networks:
       network_redis_cluster:
         ipv4_address: 172.30.0.15  
 
-  redis-replica3:
-    image: redis:6.0
-    container_name: redis_replica3
-    hostname: redis_replica3
-    volumes:
-      - ./container-data/redis-replica3:/data      
-    healthcheck:
-      test: [ "CMD", "redis-cli","-p","6379"]
-      timeout: 10s
-      interval: 3s
-      retries: 10    
+  cluster_helper:
+    image: redis:${REDIS_VERSION}
+    container_name: cluster_helper
+    hostname: cluster_helper
+    command: redis-cli -a ${REDIS_PASSWORD} --cluster create 172.30.0.10:6379 172.30.0.11:6379 172.30.0.12:6379 172.30.0.13:6379 172.30.0.14:6379 172.30.0.15:6379 --cluster-replicas 1 --cluster-yes
+    depends_on:
+      rc_node1: 
+        condition: service_healthy
+      rc_node2: 
+        condition: service_healthy
+      rc_node3:
+        condition: service_healthy
+      rc_node4:
+        condition: service_healthy
+      rc_node5: 
+        condition: service_healthy
+      rc_node6: 
+        condition: service_healthy
     networks:
       network_redis_cluster:
-        ipv4_address: 172.30.0.16                                          
+        ipv4_address: 172.30.0.16                 
 
 networks:
   network_redis_cluster:
